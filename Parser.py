@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import requests
 import sys
 
+
 class CategoryExtractor:
     def __init__(self, driver_path):
         self.driver_path = driver_path
@@ -260,6 +261,70 @@ if __name__ == '__main__':
 
                 print(images)
 
+                # check package counts
+                packageCount = driver.execute_script('''
+                    // Находим все элементы с классом "pip-product-dimensions__measurement-value"
+                    const packageElements = document.querySelectorAll('.pip-product-dimensions__measurement-value');
+                    let totalPackages = 0;
+
+                    // Перебираем найденные элементы и суммируем количество упаковок
+                    packageElements.forEach(packageElement => {
+                        totalPackages += parseInt(packageElement.textContent);
+                    });
+
+                    // Возвращаем общее количество упаковок
+                    return totalPackages;
+                ''')
+
+                if packageCount == 1:
+                    width = driver.execute_script('''
+                        const parent = document.querySelectorAll('.pip-product-dimensions__package-container');
+                        const elements = parent[0].querySelectorAll('.pip-product-dimensions__measurement-wrapper');
+                        originalString = elements[0].innerText;
+                        const match = originalString.match(/\d+[.,]?\d*/);
+                        if (match) {
+                            const extractedNumber = match[0].replace('.', ',');
+                            return extractedNumber;
+                        } 
+                    ''')
+
+                    height = driver.execute_script('''
+                        const parent = document.querySelectorAll('.pip-product-dimensions__package-container');
+                        const elements = parent[0].querySelectorAll('.pip-product-dimensions__measurement-wrapper');
+                        originalString = elements[1].innerText;
+                        const match = originalString.match(/\d+[.,]?\d*/);
+                        if (match) {
+                            const extractedNumber = match[0].replace('.', ',');
+                            return extractedNumber;
+                        } 
+                     ''')
+
+                    length = driver.execute_script('''
+                        const parent = document.querySelectorAll('.pip-product-dimensions__package-container');
+                        const elements = parent[0].querySelectorAll('.pip-product-dimensions__measurement-wrapper');
+                        originalString = elements[2].innerText;
+                        const match = originalString.match(/\d+[.,]?\d*/);
+                        if (match) {
+                            const extractedNumber = match[0].replace('.', ',');
+                            return extractedNumber;
+                        } 
+                    ''')
+
+                    weight = driver.execute_script('''
+                        const parent = document.querySelectorAll('.pip-product-dimensions__package-container');
+                        const elements = parent[0].querySelectorAll('.pip-product-dimensions__measurement-wrapper');
+                        originalString = elements[3].innerText;
+                        const match = originalString.match(/\d+[.,]?\d*/);
+                        if (match) {
+                            const extractedNumber = match[0].replace('.', ',');
+                            return extractedNumber;
+                        } 
+                    ''')
+
+                    print(f"Вес: {weight}")
+                    print(f"Ширина: {width}")
+                    print(f"Высота: {height}")
+                    print(f"Длина: {length}")
 
 
             except NoSuchElementException:
@@ -345,7 +410,6 @@ if __name__ == '__main__':
 
             # Сохраняем файл Excel после каждой записи
             wb.save('output.xlsx')
-
 
 # Save the Excel file after processing all products
 wb.save('output.xlsx')
